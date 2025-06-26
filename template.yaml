@@ -57,18 +57,6 @@ spec:
           type: string
           description: Name for the java package - e.g. (com.spotify.demo.<package>)
 
-    - title: Location
-      required:
-        - repoUrl
-      properties:
-        repoUrl:
-          title: Repository location
-          type: string
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
-
   steps:
     - id: template
       name: Fetch Skeleton
@@ -84,7 +72,9 @@ spec:
           owner: ${{ parameters.owner }}
           system: ${{ parameters.system }}
           java_package_name: ${{ parameters.java_package_name }}
-          destination: ${{ parameters.repoUrl | parseRepoUrl }}
+          destination: # use format from the RepoUrlPicker
+            owner: spotify-portal-public-demo
+            repo: ${{ parameters.component_id }}
           artifact_id: ${{ parameters.component_id }}
 
     - id: flux_fetch
@@ -102,13 +92,15 @@ spec:
         targetPath: flux/apps/${{ parameters.component_id }}.yaml
         values:
           component_id: ${{ parameters.component_id }}
-          destination: ${{ parameters.repoUrl | parseRepoUrl }}
+          destination: # use format from the RepoUrlPicker
+            owner: spotify-portal-public-demo
+            repo: ${{ parameters.component_id }}
 
     - id: publish
       name: Publish
       action: publish:github
       input:
-        repoUrl: ${{ parameters.repoUrl }}
+        repoUrl: github.com?owner=spotify-portal-public-demo&repo=${{ parameters.component_id }}
         sourcePath: repo
         description: This is ${{ parameters.component_id }}
         repoVisibility: public
@@ -119,7 +111,7 @@ spec:
       name: Flux PR
       action: publish:github:pull-request
       input:
-        repoUrl: github.com?repo=flux&owner=spotify-portal-public-demo
+        repoUrl: github.com?owner=spotify-portal-public-demo&repo=flux
         sourcePath: flux
         branchName: scaffolder-${{ parameters.component_id }}
         title: add app ${{ parameters.component_id }}
